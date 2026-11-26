@@ -1,6 +1,7 @@
 #include "node.h"
 #include "V8HandleScope.h"
 
+#include "ErrorCode.h"
 #include "JavaScriptCore/ArgList.h"
 #include "JavaScriptCore/CallData.h"
 #include "JavaScriptCore/ThrowScope.h"
@@ -119,6 +120,13 @@ void executePendingV8Module(Zig::GlobalObject* globalObject, node_module* mod, J
     auto& vm = JSC::getVM(globalObject);
     auto scope = DECLARE_THROW_SCOPE(vm);
     auto keyStr = WTF::String::fromUTF8(mod->nm_modname);
+
+    if (mod->nm_modname && !strcmp(mod->nm_modname, "better_sqlite3")) {
+        // The Node-API build of better-sqlite3 registers the same name and works; only this, its V8 C++ API build, is unsupported.
+        Bun::throwError(globalObject, scope, Bun::ErrorCode::ERR_DLOPEN_FAILED,
+            "'better-sqlite3' is not yet supported in Bun.\nUpgrade to better-sqlite3 13.0.2 or later, which is a Node-API addon.\nTrack the status in https://github.com/oven-sh/bun/issues/4290\nIn the meantime, you could try bun:sqlite which has a similar API."_s);
+        return;
+    }
 
     if (mod->nm_version != REPORTED_NODEJS_ABI_VERSION) {
         auto* error = JSC::createError(globalObject,

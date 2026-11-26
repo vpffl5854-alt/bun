@@ -587,16 +587,6 @@ JSC_DEFINE_HOST_FUNCTION_WITH_ATTRIBUTES(Process_functionDlopen, __attribute__((
 
     RETURN_IF_EXCEPTION(scope, {});
 
-    // Handle known yet-to-be-working in Bun
-    {
-        static constexpr ASCIILiteral better_sqlite3_node = "better_sqlite3.node"_s;
-        static constexpr ASCIILiteral better_sqlite3_message = "'better-sqlite3' is not yet supported in Bun.\nTrack the status in https://github.com/oven-sh/bun/issues/4290\nIn the meantime, you could try bun:sqlite which has a similar API."_s;
-        if (filename.endsWith(better_sqlite3_node)) {
-            return throwError(globalObject, scope, ErrorCode::ERR_DLOPEN_FAILED,
-                better_sqlite3_message);
-        }
-    }
-
 #if !OS(WINDOWS)
     // glibc's dlopen() alloca()s a copy of a name without a '/'. A path this long can't be opened anyway.
     if (filename.length() >= PATH_MAX) [[unlikely]] {
